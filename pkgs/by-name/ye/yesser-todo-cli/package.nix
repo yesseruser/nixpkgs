@@ -2,9 +2,11 @@
   lib,
   fetchFromGitHub,
   rustPlatform,
+  cacert,
+  makeWrapper,
 }:
 
-rustPlatform.buildRustPackage (finalAttrs: {
+rustPlatform.buildRustPackage (finalAttrs: rec {
   pname = "yesser-todo-cli";
   version = "1.2.1";
 
@@ -15,7 +17,17 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-WHSoHKrHE9BmyV9FTQCilC6EWbrRgdZYMBMXuN4idnI=";
   };
 
-  cargoHash = "sha256-xcK9PSBLLs9VZCDBKfPECFjxRdQZ1tSbz/an+KcsMIo=";
+  nativeBuildInputs = [ makeWrapper ];
+  buildInputs = [ cacert ];
+
+  cargoLock = {
+    lockFile = "${src}/Cargo.lock";
+  };
+
+  postFixup = ''
+    wrapProgram $out/bin/todo \
+      --set-default SSL_CERT_FILE "${cacert}/etc/ssl/certs/ca-bundle.crt"
+  '';
 
   meta = {
     description = "CLI app for managing your tasks";

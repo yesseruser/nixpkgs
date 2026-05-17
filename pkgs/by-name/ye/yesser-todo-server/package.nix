@@ -2,9 +2,11 @@
   lib,
   fetchFromGitHub,
   rustPlatform,
+  cacert,
+  makeWrapper
 }:
 
-rustPlatform.buildRustPackage (finalAttrs: {
+rustPlatform.buildRustPackage (finalAttrs: rec {
   pname = "yesser-todo-server";
   version = "1.1.1";
 
@@ -15,9 +17,20 @@ rustPlatform.buildRustPackage (finalAttrs: {
     hash = "sha256-8p/ma+XB2Jqva9NEMZYF8cuYSrEb7sa0bPAcJrNk+14=";
   };
 
-  cargoHash = "sha256-ikjda/f9/gebSDOmKTSdDveI0kHZmQoh3X8AEg9MR2g=";
+  nativeBuildInputs = [ makeWrapper ];
+  buildInputs = [ cacert ];
+
+  cargoLock = {
+    lockFile = "${src}/Cargo.lock";
+  };
+
   cargoBuildFlags = [ "--package" "yesser-todo-server" ];
   cargoTestFlags = [ "--package" "yesser-todo-server" "--" "--test-threads=1" ];
+
+  postFixup = ''
+    wrapProgram $out/bin/yesser-todo-server \
+      --set-default SSL_CERT_FILE "${cacert}/etc/ssl/certs/ca-bundle.crt"
+  '';
 
   meta = {
     description = "Server for yesser-todo-cli";
